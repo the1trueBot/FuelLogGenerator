@@ -4,81 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Fuel Log Generator</title>
-    <!-- Tailwind CSS CDN for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
-        /* Custom styles for Inter font and general body */
+        /* Custom styles for Inter font (if needed, Bootstrap uses system fonts by default) */
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Ensure rounded corners on all elements as per instructions */
-        * {
-            border-radius: 0.5rem; /* Tailwind's rounded-lg equivalent */
+        /* Ensure rounded corners on all elements as per instructions (Bootstrap handles most of this) */
+        .form-control, .btn, .card, table {
+            border-radius: 0.5rem !important; /* Apply rounded corners explicitly */
+        }
+        /* Custom styling for the table header to match blue-600 from previous version */
+        .table thead th {
+            background-color: #2563eb; /* A shade of blue similar to Tailwind's blue-600 */
+            color: white;
+        }
+        /* Custom styling for the table footer to match blue-500 from previous version */
+        .table tfoot td {
+            background-color: #3b82f6; /* A shade of blue similar to Tailwind's blue-500 */
+            color: white;
         }
     </style>
 </head>
-<body class="min-h-screen bg-gray-100 p-4 sm:p-8 flex items-center justify-center">
-    <div class="max-w-4xl w-full mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg">
-        <h1 class="text-3xl sm:text-4xl font-bold text-center text-blue-700 mb-8">
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 py-4 py-sm-5">
+    <div class="container-md bg-white p-4 p-sm-5 rounded-3 shadow-lg">
+        <h1 class="text-center text-primary mb-4 mb-sm-5">
             Dynamic Fuel Log Generator
         </h1>
 
         <!-- Input Form -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div>
-                <label for="startDate" class="block text-gray-700 text-sm font-bold mb-2">
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-6">
+                <label for="startDate" class="form-label fw-bold text-secondary">
                     Start Date:
                 </label>
                 <input
                     type="date"
                     id="startDate"
-                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    class="form-control"
                     value="2024-07-01"
                 />
             </div>
-            <div>
-                <label for="endDate" class="block text-gray-700 text-sm font-bold mb-2">
+            <div class="col-12 col-md-6">
+                <label for="endDate" class="form-label fw-bold text-secondary">
                     End Date:
                 </label>
                 <input
                     type="date"
                     id="endDate"
-                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    class="form-control"
                     value="2025-06-30"
                 />
             </div>
-            <div>
-                <label for="maxTankCapacity" class="block text-gray-700 text-sm font-bold mb-2">
+            <div class="col-12 col-md-6">
+                <label for="maxTankCapacity" class="form-label fw-bold text-secondary">
                     Max Tank Capacity (Gallons):
                 </label>
                 <input
                     type="number"
                     id="maxTankCapacity"
-                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    class="form-control"
                     value="26"
                     min="1"
                 />
             </div>
-            <div>
-                <label for="totalGallonsToPurchase" class="block text-gray-700 text-sm font-bold mb-2">
+            <div class="col-12 col-md-6">
+                <label for="totalGallonsToPurchase" class="form-label fw-bold text-secondary">
                     Total Gallons to Purchase:
                 </label>
                 <input
                     type="number"
                     id="totalGallonsToPurchase"
-                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    class="form-control"
                     value="2450"
                     min="1"
                 />
             </div>
-            <div class="md:col-span-2">
-                <label for="gasStationsInput" class="block text-gray-700 text-sm font-bold mb-2">
+            <div class="col-12">
+                <label for="gasStationsInput" class="form-label fw-bold text-secondary">
                     Gas Stations (one per line):
                 </label>
                 <textarea
                     id="gasStationsInput"
                     rows="5"
-                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    class="form-control"
                     placeholder="e.g., Shell, 123 Main St"
                 >Circle K, 35 S Grand Blvd, St Louis, Missouri, 63103
 BP, 1815 Arsenal, St Louis, Missouri, 63118
@@ -93,43 +103,52 @@ Phillips 66, 1655 S Jefferson Ave, St Louis, Missouri, 63104</textarea>
             </div>
         </div>
 
-        <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 hidden" role="alert">
-            <strong class="font-bold">Error!</strong>
-            <span class="block sm:inline" id="errorMessageText"></span>
+        <div id="errorMessage" class="alert alert-danger mb-4 d-none" role="alert">
+            <strong class="me-2">Error!</strong>
+            <span id="errorMessageText"></span>
         </div>
 
-        <div class="text-center mb-8">
+        <div class="d-flex justify-content-center gap-3 mb-4">
             <button
                 id="generateLogBtn"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
+                class="btn btn-primary btn-lg shadow-sm"
             >
                 Generate Fuel Log
+            </button>
+            <button
+                id="resetBtn"
+                class="btn btn-secondary btn-lg shadow-sm"
+            >
+                Reset
             </button>
         </div>
 
         <!-- Display Table -->
-        <div id="tableContainer" class="overflow-x-auto mb-8 hidden">
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-                <thead class="bg-blue-600 text-white">
+        <div id="tableContainer" class="table-responsive mb-4 d-none">
+            <table class="table table-striped table-bordered rounded-3 shadow-sm">
+                <thead>
                     <tr>
-                        <th class="py-3 px-4 text-left rounded-tl-lg">Date</th>
-                        <th class="py-3 px-4 text-left">Gallons Purchased</th>
-                        <th class="py-3 px-4 text-left rounded-tr-lg">Gas Station</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Gallons Purchased</th>
+                        <th scope="col">Gas Station</th>
                     </tr>
                 </thead>
                 <tbody id="purchaseLogTableBody">
                     <!-- Table rows will be inserted here by JavaScript -->
                 </tbody>
-                <tfoot class="bg-blue-500 text-white font-bold">
+                <tfoot>
                     <tr>
-                        <td class="py-3 px-4 rounded-bl-lg">Total Gallons:</td>
-                        <td class="py-3 px-4" id="totalGallonsInLog"></td>
-                        <td class="py-3 px-4 rounded-br-lg"></td>
+                        <td class="fw-bold">Total Gallons:</td>
+                        <td id="totalGallonsInLog" class="fw-bold"></td>
+                        <td></td>
                     </tr>
                 </tfoot>
             </table>
         </div>
     </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
         // DOM element references
@@ -139,6 +158,7 @@ Phillips 66, 1655 S Jefferson Ave, St Louis, Missouri, 63104</textarea>
         const totalGallonsToPurchaseInput = document.getElementById('totalGallonsToPurchase');
         const gasStationsInput = document.getElementById('gasStationsInput');
         const generateLogBtn = document.getElementById('generateLogBtn');
+        const resetBtn = document.getElementById('resetBtn'); // New reset button
         const errorMessageDiv = document.getElementById('errorMessage');
         const errorMessageText = document.getElementById('errorMessageText');
         const tableContainer = document.getElementById('tableContainer');
@@ -160,13 +180,13 @@ Phillips 66, 1655 S Jefferson Ave, St Louis, Missouri, 63104</textarea>
         // Function to display error messages
         function showError(message) {
             errorMessageText.textContent = message;
-            errorMessageDiv.classList.remove('hidden');
-            tableContainer.classList.add('hidden'); // Hide table if there's an error
+            errorMessageDiv.classList.remove('d-none'); // Use Bootstrap's d-none
+            tableContainer.classList.add('d-none'); // Hide table if there's an error
         }
 
         // Function to hide error messages
         function hideError() {
-            errorMessageDiv.classList.add('hidden');
+            errorMessageDiv.classList.add('d-none');
             errorMessageText.textContent = '';
         }
 
@@ -311,13 +331,36 @@ Phillips 66, 1655 S Jefferson Ave, St Louis, Missouri, 63104</textarea>
 
             // Update total gallons display
             totalGallonsInLogSpan.textContent = runningTotalForDisplay.toFixed(1) + ' gallons';
-            tableContainer.classList.remove('hidden'); // Show the table
+            tableContainer.classList.remove('d-none'); // Show the table
         }
 
-        // Event listener for the generate button
-        generateLogBtn.addEventListener('click', generateLog);
+        // Function to reset inputs and hide table
+        function resetForm() {
+            startDateInput.value = "2024-07-01";
+            endDateInput.value = "2025-06-30";
+            maxTankCapacityInput.value = "26";
+            totalGallonsToPurchaseInput.value = "2450";
+            gasStationsInput.value = `Circle K, 35 S Grand Blvd, St Louis, Missouri, 63103
+BP, 1815 Arsenal, St Louis, Missouri, 63118
+Moto, 3120 Mississippi Ave, Sauget, Illinois, 6220
+Love's, 6124 N Broadway, St Louis, Missouri, 63147
+Circle K, 1514 Hampton Ave, St Louis, Missouri, 63139
+Zoom, 1300 N Tucker Blvd, St. Louis, Missouri, 63106
+ZX, 1007 S Broadway, St Louis, Missouri, 63103
+Shell, 721 N Tucker Blvd, St Louis, Missouri, 63101
+QuikTrip, 2600 Chouteau Ave, St Louis, Missouri, 63103
+Phillips 66, 1655 S Jefferson Ave, St Louis, Missouri, 63104`;
+            purchaseLogTableBody.innerHTML = ''; // Clear table rows
+            tableContainer.classList.add('d-none'); // Hide table
+            hideError(); // Hide any error messages
+        }
 
-        // Initial generation on page load (optional, but useful for first view)
+
+        // Event listeners
+        generateLogBtn.addEventListener('click', generateLog);
+        resetBtn.addEventListener('click', resetForm); // Add event listener for reset button
+
+        // Initial generation on page load
         document.addEventListener('DOMContentLoaded', generateLog);
 
     </script>
