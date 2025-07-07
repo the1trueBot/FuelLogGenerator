@@ -93,34 +93,23 @@ const startDateInput = document.getElementById('startDate');
             numPurchases = Math.max(Math.min(numPurchases, diffDays), Math.ceil(totalGallonsToPurchase / maxTankCapacity));
             numPurchases = Math.max(numPurchases, 1); // Ensure at least one purchase if totalGallonsToPurchase > 0
 
-            // Generate potential dates
-            const allPossibleDates = [];
-            for (let i = 0; i <= diffDays; i++) {
-                const date = new Date(parsedStartDate);
-                date.setDate(parsedStartDate.getDate() + i);
-                allPossibleDates.push(date);
+            // Generate spaced-out random dates
+            let selectedDates = [];
+            let currentDate = new Date(parsedStartDate);
+            for (let i = 0; i < numPurchases && currentDate <= parsedEndDate; i++) {
+                selectedDates.push(new Date(currentDate));
+
+                // Randomly skip 2 to 5 days ahead
+                const daysToAdd = Math.floor(random.uniform(2, 6)); // 2 to 5 inclusive
+                currentDate.setDate(currentDate.getDate() + daysToAdd);
             }
 
-            // Randomly select distinct dates for the purchases
-            let selectedDates = [];
-            if (numPurchases <= allPossibleDates.length) {
-                selectedDates = randomSample(allPossibleDates, numPurchases).sort((a, b) => a.getTime() - b.getTime());
-            } else {
-                // If more purchases than days, assign multiple purchases to some days
-                selectedDates = Array(numPurchases).fill(0).map(() => {
-                    const randomDay = Math.floor(Math.random() * diffDays);
-                    const date = new Date(parsedStartDate);
-                    date.setDate(parsedStartDate.getDate() + randomDay);
-                    return date;
-                }).sort((a, b) => a.getTime() - b.getTime());
-            }
 
             // Generate random fill amounts
             let generatedGallons = Array(numPurchases).fill(0).map(() =>
                 random.uniform(minFillAmount, maxTankCapacity)
             );
 
-            // Scale generated gallons to match the total, and adjust for min/max capacity
             const currentSum = generatedGallons.reduce((sum, val) => sum + val, 0);
             const scaleFactor = totalGallonsToPurchase / currentSum;
 
@@ -129,11 +118,10 @@ const startDateInput = document.getElementById('startDate');
                 return Math.max(minFillAmount, Math.min(maxTankCapacity, scaledG));
             });
 
-            // Final fine-tuning to hit the target total exactly due to floating point and capping
             let finalSum = generatedGallons.reduce((sum, val) => sum + val, 0);
             let diff = totalGallonsToPurchase - finalSum;
             let iterationCount = 0;
-            const maxIterations = 100; // Prevent infinite loop for tiny differences
+            const maxIterations = 150; // Prevent infinite loop for tiny differences
 
             while (Math.abs(diff) > 0.1 && iterationCount < maxIterations) { // Adjust if difference is > 0.1 gallons
                 const adjustmentPerItem = diff / numPurchases;
