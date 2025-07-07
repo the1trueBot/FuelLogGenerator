@@ -93,16 +93,45 @@ const startDateInput = document.getElementById('startDate');
             numPurchases = Math.max(Math.min(numPurchases, diffDays), Math.ceil(totalGallonsToPurchase / maxTankCapacity));
             numPurchases = Math.max(numPurchases, 1); // Ensure at least one purchase if totalGallonsToPurchase > 0
 
-            // Generate spaced-out random dates
-            let selectedDates = [];
-            let currentDate = new Date(parsedStartDate);
-            for (let i = 0; i < numPurchases && currentDate <= parsedEndDate; i++) {
-                selectedDates.push(new Date(currentDate));
+            // // Generate potential dates
+            // const allPossibleDates = [];
+            // for (let i = 0; i <= diffDays; i++) {
+            //     const date = new Date(parsedStartDate);
+            //     date.setDate(parsedStartDate.getDate() + i);
+            //     allPossibleDates.push(date);
+            // }
 
-                // Randomly skip 2 to 5 days ahead
-                const daysToAdd = Math.floor(random.uniform(2, 6)); // 2 to 5 inclusive
-                currentDate.setDate(currentDate.getDate() + daysToAdd);
-            }
+            
+
+            // // Randomly select distinct dates for the purchases
+            // let selectedDates = [];
+            // if (numPurchases <= allPossibleDates.length) {
+            //     selectedDates = randomSample(allPossibleDates, numPurchases).sort((a, b) => a.getTime() - b.getTime());
+            // } else {
+            //     // If more purchases than days, assign multiple purchases to some days
+            //     selectedDates = Array(numPurchases).fill(0).map(() => {
+            //         const randomDay = Math.floor(Math.random() * diffDays);
+            //         const date = new Date(parsedStartDate);
+            //         date.setDate(parsedStartDate.getDate() + randomDay);
+            //         return date;
+            //     }).sort((a, b) => a.getTime() - b.getTime());
+            // }
+
+            // Generate spaced-out random dates until we reach the end date
+let selectedDates = [];
+let currentDate = new Date(parsedStartDate);
+
+// Keep going until we have enough dates or hit the end date
+while (selectedDates.length < numPurchases && currentDate <= parsedEndDate) {
+    selectedDates.push(new Date(currentDate)); // Store a copy of the current date
+
+    // Randomly skip 2 to 5 days ahead
+    const daysToAdd = Math.floor(random.uniform(2, 6)); // 2 to 5 inclusive
+    currentDate.setDate(currentDate.getDate() + daysToAdd);
+}
+
+// Adjust the number of purchases to match how many dates we actually got
+numPurchases = selectedDates.length;
 
 
             // Generate random fill amounts
