@@ -1,0 +1,16 @@
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .form-control, .btn, .card, table {
+            border-radius: 0.5rem !important; /* Apply rounded corners explicitly */
+        }
+        /* Custom styling for the table header to match blue-600 from previous version */
+        .table thead th {
+            background-color: #2563eb; /* A shade of blue similar to Tailwind's blue-600 */
+            color: white;
+        }
+        /* Custom styling for the table footer to match blue-500 from previous version */
+        .table tfoot td {
+            background-color: #3b82f6; /* A shade of blue similar to Tailwind's blue-500 */
+            color: white;
+        }
