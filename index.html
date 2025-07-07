@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Fuel Log Generator</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general body */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Ensure rounded corners on all elements as per instructions */
+        * {
+            border-radius: 0.5rem; /* Tailwind's rounded-lg equivalent */
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 p-4 sm:p-8 flex items-center justify-center">
+    <div class="max-w-4xl w-full mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-blue-700 mb-8">
+            Dynamic Fuel Log Generator
+        </h1>
+
+        <!-- Input Form -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <label for="startDate" class="block text-gray-700 text-sm font-bold mb-2">
+                    Start Date:
+                </label>
+                <input
+                    type="date"
+                    id="startDate"
+                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    value="2024-07-01"
+                />
+            </div>
+            <div>
+                <label for="endDate" class="block text-gray-700 text-sm font-bold mb-2">
+                    End Date:
+                </label>
+                <input
+                    type="date"
+                    id="endDate"
+                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    value="2025-06-30"
+                />
+            </div>
+            <div>
+                <label for="maxTankCapacity" class="block text-gray-700 text-sm font-bold mb-2">
+                    Max Tank Capacity (Gallons):
+                </label>
+                <input
+                    type="number"
+                    id="maxTankCapacity"
+                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    value="26"
+                    min="1"
+                />
+            </div>
+            <div>
+                <label for="totalGallonsToPurchase" class="block text-gray-700 text-sm font-bold mb-2">
+                    Total Gallons to Purchase:
+                </label>
+                <input
+                    type="number"
+                    id="totalGallonsToPurchase"
+                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    value="2450"
+                    min="1"
+                />
+            </div>
+            <div class="md:col-span-2">
+                <label for="gasStationsInput" class="block text-gray-700 text-sm font-bold mb-2">
+                    Gas Stations (one per line):
+                </label>
+                <textarea
+                    id="gasStationsInput"
+                    rows="5"
+                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    placeholder="e.g., Shell, 123 Main St"
+                >Circle K, 35 S Grand Blvd, St Louis, Missouri, 63103
+BP, 1815 Arsenal, St Louis, Missouri, 63118
+Moto, 3120 Mississippi Ave, Sauget, Illinois, 6220
+Love's, 6124 N Broadway, St Louis, Missouri, 63147
+Circle K, 1514 Hampton Ave, St Louis, Missouri, 63139
+Zoom, 1300 N Tucker Blvd, St. Louis, Missouri, 63106
+ZX, 1007 S Broadway, St Louis, Missouri, 63103
+Shell, 721 N Tucker Blvd, St Louis, Missouri, 63101
+QuikTrip, 2600 Chouteau Ave, St Louis, Missouri, 63103
+Phillips 66, 1655 S Jefferson Ave, St Louis, Missouri, 63104</textarea>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 hidden" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline" id="errorMessageText"></span>
+        </div>
+
+        <div class="text-center mb-8">
+            <button
+                id="generateLogBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
+            >
+                Generate Fuel Log
+            </button>
+        </div>
+
+        <!-- Display Table -->
+        <div id="tableContainer" class="overflow-x-auto mb-8 hidden">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+                <thead class="bg-blue-600 text-white">
+                    <tr>
+                        <th class="py-3 px-4 text-left rounded-tl-lg">Date</th>
+                        <th class="py-3 px-4 text-left">Gallons Purchased</th>
+                        <th class="py-3 px-4 text-left rounded-tr-lg">Gas Station</th>
+                    </tr>
+                </thead>
+                <tbody id="purchaseLogTableBody">
+                    <!-- Table rows will be inserted here by JavaScript -->
+                </tbody>
+                <tfoot class="bg-blue-500 text-white font-bold">
+                    <tr>
+                        <td class="py-3 px-4 rounded-bl-lg">Total Gallons:</td>
+                        <td class="py-3 px-4" id="totalGallonsInLog"></td>
+                        <td class="py-3 px-4 rounded-br-lg"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // DOM element references
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const maxTankCapacityInput = document.getElementById('maxTankCapacity');
+        const totalGallonsToPurchaseInput = document.getElementById('totalGallonsToPurchase');
+        const gasStationsInput = document.getElementById('gasStationsInput');
+        const generateLogBtn = document.getElementById('generateLogBtn');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const errorMessageText = document.getElementById('errorMessageText');
+        const tableContainer = document.getElementById('tableContainer');
+        const purchaseLogTableBody = document.getElementById('purchaseLogTableBody');
+        const totalGallonsInLogSpan = document.getElementById('totalGallonsInLog');
+
+        // Helper for random sampling without replacement
+        function randomSample(array, size) {
+            const shuffled = [...array].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, size);
+        }
+
+        // Simple random number generator (Python's random.uniform equivalent)
+        const random = {
+            uniform: (min, max) => Math.random() * (max - min) + min,
+            choice: (array) => array[Math.floor(Math.random() * array.length)]
+        };
+
+        // Function to display error messages
+        function showError(message) {
+            errorMessageText.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+            tableContainer.classList.add('hidden'); // Hide table if there's an error
+        }
+
+        // Function to hide error messages
+        function hideError() {
+            errorMessageDiv.classList.add('hidden');
+            errorMessageText.textContent = '';
+        }
+
+        // Function to generate the fuel log
+        function generateLog() {
+            hideError(); // Clear previous errors
+
+            const startDateStr = startDateInput.value;
+            const endDateStr = endDateInput.value;
+            const maxTankCapacity = parseFloat(maxTankCapacityInput.value);
+            const totalGallonsToPurchase = parseFloat(totalGallonsToPurchaseInput.value);
+            const gasStations = gasStationsInput.value.split('\n')
+                                .map(s => s.trim())
+                                .filter(s => s.length > 0);
+
+            const parsedStartDate = new Date(startDateStr);
+            const parsedEndDate = new Date(endDateStr);
+
+            // --- Input Validation ---
+            if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
+                showError('Please enter valid start and end dates.');
+                return;
+            }
+            if (parsedStartDate >= parsedEndDate) {
+                showError('End Date must be after Start Date.');
+                return;
+            }
+            if (isNaN(maxTankCapacity) || maxTankCapacity <= 0) {
+                showError('Max Tank Capacity must be a positive number.');
+                return;
+            }
+            if (isNaN(totalGallonsToPurchase) || totalGallonsToPurchase <= 0) {
+                showError('Total Gallons to Purchase must be a positive number.');
+                return;
+            }
+            if (gasStations.length === 0) {
+                showError('Please enter at least one gas station.');
+                return;
+            }
+            if (totalGallonsToPurchase < maxTankCapacity) {
+                showError('Total gallons to purchase should generally be greater than or equal to max tank capacity.');
+                return;
+            }
+
+            // --- Log Generation Logic ---
+            const log = [];
+            const minFillAmount = 5; // Minimum realistic fill amount
+
+            // Calculate the number of days in the range
+            const diffTime = Math.abs(parsedEndDate.getTime() - parsedStartDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // Estimate a reasonable number of purchases to distribute the total gallons
+            const estimatedAvgFill = (minFillAmount + maxTankCapacity) / 2;
+            let numPurchases = Math.ceil(totalGallonsToPurchase / estimatedAvgFill);
+
+            // Ensure we don't try to make more purchases than there are days, or too few
+            numPurchases = Math.max(Math.min(numPurchases, diffDays), Math.ceil(totalGallonsToPurchase / maxTankCapacity));
+            numPurchases = Math.max(numPurchases, 1); // Ensure at least one purchase if totalGallonsToPurchase > 0
+
+            // Generate potential dates
+            const allPossibleDates = [];
+            for (let i = 0; i <= diffDays; i++) {
+                const date = new Date(parsedStartDate);
+                date.setDate(parsedStartDate.getDate() + i);
+                allPossibleDates.push(date);
+            }
+
+            // Randomly select distinct dates for the purchases
+            let selectedDates = [];
+            if (numPurchases <= allPossibleDates.length) {
+                selectedDates = randomSample(allPossibleDates, numPurchases).sort((a, b) => a.getTime() - b.getTime());
+            } else {
+                // If more purchases than days, assign multiple purchases to some days
+                selectedDates = Array(numPurchases).fill(0).map(() => {
+                    const randomDay = Math.floor(Math.random() * diffDays);
+                    const date = new Date(parsedStartDate);
+                    date.setDate(parsedStartDate.getDate() + randomDay);
+                    return date;
+                }).sort((a, b) => a.getTime() - b.getTime());
+            }
+
+            // Generate random fill amounts
+            let generatedGallons = Array(numPurchases).fill(0).map(() =>
+                random.uniform(minFillAmount, maxTankCapacity)
+            );
+
+            // Scale generated gallons to match the total, and adjust for min/max capacity
+            const currentSum = generatedGallons.reduce((sum, val) => sum + val, 0);
+            const scaleFactor = totalGallonsToPurchase / currentSum;
+
+            generatedGallons = generatedGallons.map(g => {
+                let scaledG = g * scaleFactor;
+                return Math.max(minFillAmount, Math.min(maxTankCapacity, scaledG));
+            });
+
+            // Final fine-tuning to hit the target total exactly due to floating point and capping
+            let finalSum = generatedGallons.reduce((sum, val) => sum + val, 0);
+            let diff = totalGallonsToPurchase - finalSum;
+            let iterationCount = 0;
+            const maxIterations = 100; // Prevent infinite loop for tiny differences
+
+            while (Math.abs(diff) > 0.1 && iterationCount < maxIterations) { // Adjust if difference is > 0.1 gallons
+                const adjustmentPerItem = diff / numPurchases;
+                generatedGallons = generatedGallons.map(g => {
+                    let adjustedG = g + adjustmentPerItem;
+                    return Math.max(minFillAmount, Math.min(maxTankCapacity, adjustedG));
+                });
+                finalSum = generatedGallons.reduce((sum, val) => sum + val, 0);
+                diff = totalGallonsToPurchase - finalSum;
+                iterationCount++;
+            }
+
+            // Populate the log
+            let runningTotalForDisplay = 0;
+            purchaseLogTableBody.innerHTML = ''; // Clear previous table rows
+
+            for (let i = 0; i < numPurchases; i++) {
+                const purchaseDate = selectedDates[i];
+                const gallons = parseFloat(generatedGallons[i].toFixed(1)); // Round to 1 decimal place
+                const station = random.choice(gasStations);
+
+                // Add to log array (optional, but good for internal state if needed later)
+                log.push({
+                    date: purchaseDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+                    gallons: gallons,
+                    station: station
+                });
+
+                // Dynamically create table row
+                const row = purchaseLogTableBody.insertRow();
+                const dateCell = row.insertCell();
+                const gallonsCell = row.insertCell();
+                const stationCell = row.insertCell();
+
+                dateCell.textContent = purchaseDate.toISOString().split('T')[0];
+                gallonsCell.textContent = gallons.toFixed(1);
+                stationCell.textContent = station;
+
+                runningTotalForDisplay += gallons;
+            }
+
+            // Update total gallons display
+            totalGallonsInLogSpan.textContent = runningTotalForDisplay.toFixed(1) + ' gallons';
+            tableContainer.classList.remove('hidden'); // Show the table
+        }
+
+        // Event listener for the generate button
+        generateLogBtn.addEventListener('click', generateLog);
+
+        // Initial generation on page load (optional, but useful for first view)
+        document.addEventListener('DOMContentLoaded', generateLog);
+
+    </script>
+</body>
+</html>
